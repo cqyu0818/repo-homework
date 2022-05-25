@@ -12,23 +12,25 @@ import fs from 'fs'
 const csvFilePath = './csv/nodejs-hw1-ex1.csv'
 const txtFilePath = './csv/nodejs-hw1-ex2.txt'
 
-async function doTransfer() {
-  try {
-    const jsonArray = await csv().fromFile(csvFilePath)
-    const exist = fs.existsSync(txtFilePath)
-    if (exist) {
-      fs.unlinkSync(txtFilePath)
-    }
-    for (let i = 0; i < jsonArray.length; i++) {
-      fs.writeFile(txtFilePath, JSON.stringify(jsonArray[i]) + '\r\n', {flag: 'a'}, err => {
-        if (err) {
-          console.log('写入出错：'+err)
-        }
-      })
-    }
-  } catch (err) {
-    console.log('出错了：'+err)
+function doTransfer() {
+  let jsonArray = []
+  const exist = fs.existsSync(txtFilePath)
+  if (exist) {
+    fs.unlinkSync(txtFilePath)
   }
+  // 读取/写入
+  csv().fromFile(csvFilePath).subscribe(json => {
+    fs.writeFile(txtFilePath, JSON.stringify(json) + '\r\n', { flag: 'a' }, err => {
+      if (err) {
+        console.log('写入出错：' + err)
+      }
+    })
+    jsonArray.push(json)
+  }, err => {
+    console.log('读取出错:' + err)
+  }, () => {
+    console.log(jsonArray)
+  });
 }
 
 doTransfer()
