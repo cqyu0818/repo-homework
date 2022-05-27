@@ -19,8 +19,8 @@ function doTransfer() {
     fs.unlinkSync(txtFilePath)
   }
   // 读取/写入
-  csv().fromFile(csvFilePath).subscribe(json => {
-    fs.writeFile(txtFilePath, JSON.stringify(json) + '\r\n', { flag: 'a' }, err => {
+  csv().fromFile(csvFilePath).subscribe(async json => {
+    await fs.writeFile(txtFilePath, JSON.stringify(json) + '\r\n', { flag: 'a' }, err => {
       if (err) {
         console.log('写入出错：' + err)
       }
