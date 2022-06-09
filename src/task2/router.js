@@ -1,59 +1,62 @@
 const express = require('express')
 const apiRouter = express.Router()
-const validate = require('./validate')
+
+const Joi = require('joi')
+const validator = require('express-joi-validation').createValidator({ passError: true })
+
 import { v4 as uuidv4 } from 'uuid';
 
 const userArr = []
 
+const querySchema = Joi.object({
+  id: Joi.any(),
+  login: Joi.string().required(),
+  password: Joi.string().required().regex(/^(?![0-9]+$)(?![a-zA-Z]+$)[0-9A-Za-z]{0,}$/).error(new Error('password must contain letters and numbers')),
+  age: Joi.number().required().min(4).max(130).error(new Error('Uer’s age must be between 4 and 130')),
+})
+
 // 新增用户
-apiRouter.post('/createUser', async (req, res) => {
-  const error = await validate(req, res)
-  if (!error) {
-    const body = req.body
-    userArr.push({
-      id: uuidv4(),
-      login: body.login,
-      password: body.password,
-      age: body.age,
-      isDeleted: 0
-    })
+apiRouter.post('/user', validator.body(querySchema), async (req, res) => {
+  const body = req.body
+  userArr.push({
+    id: uuidv4(),
+    login: body.login,
+    password: body.password,
+    age: body.age,
+    isDeleted: 0
+  })
+  res.send({
+    status: 200,
+    msg: 'SUCCESS'
+  })
+})
+
+// 更新用户
+apiRouter.put('/user/:id', validator.body(querySchema), (req, res) => {
+  const body = req.body
+  const { id } = req.params
+  const i = userArr.findIndex(item => item.id === id && !item.isDeleted)
+  if (i >= 0) {
+    userArr[i] = { id, ...body, isDeleted: 0 }
     res.send({
       status: 200,
-      msg: '创建成功！'
+      msg: 'SUCCESS'
     })
   } else {
     res.send({
       status: 400,
-      msg: error.message
+      msg: `FAILURE: Can't find User by Id ${id}`
     })
   }
 })
 
-// 更新用户
-apiRouter.post('/updateUser', (req, res) => {
-  const valid = validate(req, res)
-  if (valid) {
-    const body = req.body
-    const i = userArr.findIndex(item => item.id === body.id)
-    if (i >= 0) {
-      userArr[i] = { ...body, isDeleted: 0 }
-      res.send({
-        status: 200,
-        msg: '更新成功'
-      })
-    } else {
-      throw new Error('更新失败')
-    }
-  }
-})
-
 // 查询用户
-apiRouter.get('/getUserById/:id', (req, res) => {
-  const id = req.params.id || ''
+apiRouter.get('/user/:id', (req, res) => {
+  const { id } = req.params
   const user = userArr.filter(item => item.id === id && !item.isDeleted)
   res.send({
     status: 200,
-    msg: '查询成功',
+    msg: 'SUCCESS',
     data: user[0] || {}
   })
 })
@@ -69,26 +72,29 @@ apiRouter.get('/getAutoSuggestUsers', (req, res) => {
     searchList = searchList.filter(item => item.login.indexOf(loginSubstring) > -1)
   }
   // sorted by login property
-  searchList.sort((a, b) => a.login > b.login ? 1 : ( a.login < b.login ? -1 : 0))
+  searchList.sort((a, b) => a.login > b.login ? 1 : (a.login < b.login ? -1 : 0))
   res.send({
     status: 200,
-    msg: '查询成功',
+    msg: 'SUCCESS',
     data: limit > 0 ? searchList.slice(0, limit) : searchList
   })
 })
 
 // 删除用户
-apiRouter.post('/deleteUser/:id', (req, res) => {
-  const id = req.params.id || ''
+apiRouter.delete('/user/:id', (req, res) => {
+  const { id } = req.params
   const i = userArr.findIndex(item => item.id === id)
   if (i >= 0) {
     userArr[i].isDeleted = 1
     res.send({
       status: 200,
-      msg: '删除成功'
+      msg: 'SUCCESS'
     })
   } else {
-    throw new Error('删除失败')
+    res.send({
+      status: 400,
+      msg: `FAILURE: Can't find User by Id ${id}`
+    })
   }
 })
 

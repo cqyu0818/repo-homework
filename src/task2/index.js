@@ -6,11 +6,14 @@ app.use(express.json())
 
 app.use(express.urlencoded({ extended: false }))
 
-app.use('/user', router)
+app.use('/', router)
 
 app.use(function (err, req, res, next) {
-  console.log('发生了错误：' + err.message)
-  res.send('Error!' + err.message)
+  res.json({
+    status: 400,
+    type: err.type,
+    msg: err.error.toString()
+  })
 })
 
 app.listen(80, () => {
