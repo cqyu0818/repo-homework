@@ -16,7 +16,7 @@ const querySchema = Joi.object({
 })
 
 // 新增用户
-apiRouter.post('/user', validator.body(querySchema), async (req, res) => {
+apiRouter.post('/', validator.body(querySchema), async (req, res) => {
   const body = req.body
   userArr.push({
     id: uuidv4(),
@@ -32,7 +32,7 @@ apiRouter.post('/user', validator.body(querySchema), async (req, res) => {
 })
 
 // 更新用户
-apiRouter.put('/user/:id', validator.body(querySchema), (req, res) => {
+apiRouter.put('/:id', validator.body(querySchema), (req, res) => {
   const body = req.body
   const { id } = req.params
   const i = userArr.findIndex(item => item.id === id && !item.isDeleted)
@@ -51,7 +51,7 @@ apiRouter.put('/user/:id', validator.body(querySchema), (req, res) => {
 })
 
 // 查询用户
-apiRouter.get('/user/:id', (req, res) => {
+apiRouter.get('/:id', (req, res) => {
   const { id } = req.params
   const user = userArr.filter(item => item.id === id && !item.isDeleted)
   res.send({
@@ -62,7 +62,7 @@ apiRouter.get('/user/:id', (req, res) => {
 })
 
 // 查询用户列表
-apiRouter.get('/getAutoSuggestUsers', (req, res) => {
+apiRouter.get('/auto-suggest', (req, res) => {
   const { loginSubstring = '', limit } = req.query
   let searchList = []
   // 筛选出未删除数据
@@ -81,7 +81,7 @@ apiRouter.get('/getAutoSuggestUsers', (req, res) => {
 })
 
 // 删除用户
-apiRouter.delete('/user/:id', (req, res) => {
+apiRouter.delete('/:id', (req, res) => {
   const { id } = req.params
   const i = userArr.findIndex(item => item.id === id)
   if (i >= 0) {
