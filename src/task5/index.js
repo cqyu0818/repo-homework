@@ -35,3 +35,8 @@ app.listen(80, () => {
 process.on('uncaughtException', err => {
   winstonLog.error(err)
 })
+
+// 捕获没有处理的promise rejection
+process.on('unhandledRejection', err => {
+  winstonLog.error(err)
+})
