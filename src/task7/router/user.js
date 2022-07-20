@@ -1,12 +1,12 @@
+import UserModel from '../models/userModels'
+
+const UserInstance = new UserModel()
+
 const express = require('express')
 const userRouter = express.Router()
 
 const Joi = require('joi')
 const validator = require('express-joi-validation').createValidator({ passError: true })
-
-import { v4 as uuidv4 } from 'uuid';
-
-const userArr = []
 
 const querySchema = Joi.object({
   id: Joi.any(),
@@ -18,14 +18,7 @@ const querySchema = Joi.object({
 // 新增用户
 userRouter.post('/', validator.body(querySchema), async (req, res, next) => {
   try {
-    const body = req.body
-    userArr.push({
-      id: uuidv4(),
-      login: body.login,
-      password: body.password,
-      age: body.age,
-      isDeleted: 0
-    })
+    UserInstance.createUser(req.body)
     res.send({
       status: 200,
       msg: 'SUCCESS'
@@ -39,19 +32,11 @@ userRouter.post('/', validator.body(querySchema), async (req, res, next) => {
 userRouter.get('/auto-suggest', (req, res, next) => {
   try {
     const { loginSubstring = '', limit } = req.query
-    let searchList = []
-    // 筛选出未删除数据
-    searchList = userArr.filter(item => !item.isDeleted)
-    // 根据loginSubstring筛选
-    if (loginSubstring) {
-      searchList = searchList.filter(item => item.login.indexOf(loginSubstring) > -1)
-    }
-    // sorted by login property
-    searchList.sort((a, b) => a.login > b.login ? 1 : (a.login < b.login ? -1 : 0))
+    const data = UserInstance.getAutoSuggest(loginSubstring, limit)
     res.send({
       status: 200,
       msg: 'SUCCESS',
-      data: limit > 0 ? searchList.slice(0, limit) : searchList
+      data
     })
   } catch (e) {
     next(e)
@@ -61,11 +46,10 @@ userRouter.get('/auto-suggest', (req, res, next) => {
 // 更新用户
 userRouter.put('/:id', validator.body(querySchema), (req, res, next) => {
   try {
-    const body = req.body
+    const user = req.body
     const { id } = req.params
-    const i = userArr.findIndex(item => item.id === id && !item.isDeleted)
+    const i = UserInstance.updateUser(id, user)
     if (i >= 0) {
-      userArr[i] = { id, ...body, isDeleted: 0 }
       res.send({
         status: 200,
         msg: 'SUCCESS'
@@ -85,11 +69,11 @@ userRouter.put('/:id', validator.body(querySchema), (req, res, next) => {
 userRouter.get('/:id', (req, res, next) => {
   try {
     const { id } = req.params
-    const user = userArr.filter(item => item.id === id && !item.isDeleted)
+    const data = UserInstance.getUserById(id)
     res.send({
       status: 200,
       msg: 'SUCCESS',
-      data: user[0] || {}
+      data: data[0] || {}
     })
   } catch (e) {
     next(e)
@@ -100,9 +84,8 @@ userRouter.get('/:id', (req, res, next) => {
 userRouter.delete('/:id', (req, res, next) => {
   try {
     const { id } = req.params
-    const i = userArr.findIndex(item => item.id === id)
+    const i = UserInstance.deleteUser(id)
     if (i >= 0) {
-      userArr[i].isDeleted = 1
       res.send({
         status: 200,
         msg: 'SUCCESS'
