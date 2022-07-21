@@ -12,7 +12,7 @@ describe('models/userModels.js', () => {
     // 关闭数据库连接
   });
 
-  it('userArr should contain an obj WHEN create one', () => {
+  it('should contain an obj WHEN create one', () => {
     const user = { login: "qiuyu",  password: "123abc", age: 18 }
     const userArr = UserInstance.createUser(user)
     expect(userArr[0]).toHaveProperty('login', 'qiuyu');
@@ -29,14 +29,14 @@ describe('models/userModels.js', () => {
     expect(user).toHaveProperty('login', 'qiuyu')
   });
 
-  it('should return the new user attribute WHEN update it', () => {
+  it('should return the user with new attribute WHEN update it', () => {
     const body = { login: "qiuyu",  password: "123abc", age: 19 }
     UserInstance.updateUser(userId, body)
     const user = UserInstance.getUserById(userId)[0]
     expect(user).toHaveProperty('age', 19);
   });
 
-  it('userArr should not contain the obj WHEN delete it', () => {
+  it('should not contain the obj WHEN delete it', () => {
     UserInstance.deleteUser(userId)
     const user = UserInstance.getUserById(userId)[0]
     expect(user).toBe(undefined)
